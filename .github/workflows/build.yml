@@ -1,0 +1,31 @@
+name: Build IPA
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Xcode Project
+        run: |
+          xcodebuild archive \
+            -project 3dsGamepadConnector.xcodeproj \
+            -scheme 3dsGamepadConnector \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/3dsGamepadConnector.xcarchive \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/3dsGamepadConnector.xcarchive/Products/Applications/*.app Payload/
+          zip -r 3dsGamepadConnector.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3dsGamepadConnector-IPA
+          path: 3dsGamepadConnector.ipa
